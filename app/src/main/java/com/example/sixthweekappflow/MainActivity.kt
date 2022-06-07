@@ -6,15 +6,15 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.sixthweekappflow.domain.CoroutineWorker
+import com.example.sixthweekappflow.domain.FlowWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
-    private val worker: CoroutineWorker = CoroutineWorker()
+    private val worker: FlowWorker = FlowWorker()
 
-    //    private val piText by lazy { findViewById<TextView>(R.id.text) }
+    private val piText by lazy { findViewById<TextView>(R.id.pi_text) }
     private val timeText by lazy { findViewById<TextView>(R.id.timer) }
     private val timeBackground by lazy { findViewById<View>(R.id.play_pause) }
 
@@ -43,6 +43,14 @@ class MainActivity : AppCompatActivity() {
                     timeText.text =
                         "${"%02d".format(minutes)}:${"%02d".format(seconds)}:${"%03d".format(millis)}"
                 }
+            }
+        }
+        lifecycleScope.launchWhenStarted {
+            worker.piFlow.collect { pi ->
+                withContext(Dispatchers.Main) {
+                    piText.text = pi
+                }
+
             }
         }
     }

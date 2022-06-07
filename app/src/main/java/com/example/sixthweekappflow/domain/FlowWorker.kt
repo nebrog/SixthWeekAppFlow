@@ -5,12 +5,14 @@ import com.example.sixthweekappflow.Background.Companion.COLOR_TIMEOUT
 import com.example.sixthweekappflow.Background.Companion.TIME_SLEEP_PAUSE
 import com.example.sixthweekappflow.Background.Companion.TIME_TIMEOUT
 import com.example.sixthweekappflow.Background.Companion.colors
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import java.util.*
 import kotlin.system.measureTimeMillis
 
-class CoroutineWorker() : Background {
+class FlowWorker() : Background {
 
     @Volatile
     private var isPaused = false
@@ -21,6 +23,9 @@ class CoroutineWorker() : Background {
 
     @Volatile
     private var timeMillis = 0L
+
+    @Volatile
+    private var n = 1
 
     val colorFlow = flow<Int> {
         while (true) {
@@ -35,7 +40,8 @@ class CoroutineWorker() : Background {
             emit(color)
             sleepTime = 0
         }
-    }
+    }.flowOn(Dispatchers.IO)
+
     val timerFlow = flow<Long> {
         while (true) {
             while (isPaused) {
@@ -50,7 +56,20 @@ class CoroutineWorker() : Background {
                 timeMillis += measure
             }
         }
-    }
+    }.flowOn(Dispatchers.IO)
+
+    val piFlow = flow<CharSequence> {
+        while (true) {
+            while (isPaused) {
+                delay(TIME_SLEEP_PAUSE)
+            }
+            val piNumber = GenerationPI.formula(n)
+            val piString = "%.${2 * n}f".format(piNumber)
+            val pi = piString.subSequence(0, n + 2)
+            emit(pi)
+            n++
+        }
+    }.flowOn(Dispatchers.Default)
 
 
     override fun pause() {
@@ -65,7 +84,6 @@ class CoroutineWorker() : Background {
         sleepTime = 0
         timeMillis = 0
         isPaused = false
-
-
+        n = 1
     }
 }
